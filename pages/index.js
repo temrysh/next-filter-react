@@ -19,7 +19,7 @@ export default function Home({ edges, colorFamilies, categoryTags, prices }) {
       resolve(edges.slice(startIndex, stopIndex))
     ).then((data) => setList([...list, ...data]))
 
-  const imageLoader = ({ src }) => `http:${src}`
+  const imageLoader = ({ src }) => `https:${src}`
 
   return (
     <div className={styles.container}>
