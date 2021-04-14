@@ -1,4 +1,4 @@
-import { useState, memo } from "react"
+import { useRef, memo } from "react"
 import Head from "next/head"
 import Image from "next/image"
 import { useRouter } from "next/router"
@@ -9,17 +9,32 @@ import styles from "../styles/Home.module.css"
 
 export default function Home({ edges, colorFamilies, categoryTags, prices }) {
   const router = useRouter()
-  const [list, setList] = useState([])
+  const list = useRef([])
   const itemCount = edges.length
 
-  const isItemLoaded = ({ index }) => !!list[index]
+  const isItemLoaded = ({ index }) => !!list.current[index]
 
   const loadMoreItems = ({ startIndex, stopIndex }) =>
-    new Promise((resolve) =>
-      resolve(edges.slice(startIndex, stopIndex))
-    ).then((data) => setList([...list, ...data]))
+    new Promise((resolve) => resolve(edges.slice(startIndex, stopIndex))).then(
+      (data) => (list.current = [...list.current, ...data])
+    )
 
-  const imageLoader = ({ src }) => `https:${src}`
+  const Item = ({ index, style }) => (
+    <div style={style}>
+      {list.current[index] && (
+        <>
+          <Image
+            width={500}
+            height={500}
+            priority
+            src={`https:${list.current[index].node.thumbnailImage.file.url}`}
+            alt={list.current[index].node.name}
+          />
+          <span>{list.current[index].node.name}</span>
+        </>
+      )}
+    </div>
+  )
 
   return (
     <div className={styles.container}>
@@ -43,23 +58,7 @@ export default function Home({ edges, colorFamilies, categoryTags, prices }) {
                 itemSize={500}
                 itemCount={itemCount}
               >
-                {({ index, style }) => (
-                  <div style={style}>
-                    {list[index] && (
-                      <>
-                        <Image
-                          loader={imageLoader}
-                          width={500}
-                          height={500}
-                          priority
-                          src={list[index].node.thumbnailImage.file.url}
-                          alt={list[index].node.name}
-                        />
-                        <span>{list[index].node.name}</span>
-                      </>
-                    )}
-                  </div>
-                )}
+                {Item}
               </List>
             )}
           </InfiniteLoader>
