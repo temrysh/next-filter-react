@@ -5,6 +5,7 @@ import styles from "../styles/Home.module.css"
 import Filters, { FilterMap } from "../components/filters"
 import List from "../components/list"
 import { ProductNode, ApiResponse } from '../utils/schema'
+import { trimTag, getFilteredList } from '../utils/helpers'
 
 type Props = {
   edges: ProductNode[]
@@ -13,46 +14,19 @@ type Props = {
   priceLimits: Range
 }
 
-const trimTag = (tag: string) => tag.trim().toLocaleLowerCase().replace('#', '')
-
-const getFilteredList = (edges: ProductNode[], filters: FilterMap, priceLimits: Range): ProductNode[] => {
-  const { colors, tags, priceRange } = filters
-  console.log({ priceRange, priceLimits })
-
-  return edges.filter(({ node }) => {
-    const price: number = Number(node.shopifyProductEu.variants.edges[0].node.price)
-
-    if (colors.length && (!node.colorFamily || !colors.includes(node.colorFamily[0].name))) return false
-
-    if (tags.length) {
-      const isSomeTagsIncludes = node.categoryTags?.reduce((acc: boolean, tag) => {
-        if (acc) return acc
-        return tags.includes(trimTag(tag))
-      }, false)
-
-      if (!isSomeTagsIncludes) return false
-    }
-
-    if (priceRange.min !== priceLimits.min) {
-      if (Math.min(priceRange.min, price) === price) return false
-    }
-
-    if (priceRange.max !== priceLimits.max) {
-      if (Math.max(priceRange.max, price) === price) return false
-    }
-
-    return true
-  })
-}
-
 const Home = ({ edges, colors, tags, priceLimits }: Props) => {
   const [filters, setFilters] = useState<FilterMap>({ colors: [], tags: [], priceRange: priceLimits })
 
-  console.time('filter')
+  // console.time('getFilteredList')
   const list = getFilteredList(edges, filters, priceLimits)
-  console.timeEnd('filter')
-
-  console.log({ filters, list })
+  // console.timeEnd('getFilteredList')
+  // Max vals when all filters enabled in dev env:
+  // for 383 items => 0.933837890625 ms // assignment list
+  // for 3830 items => 10.008056640625 ms // so 2000+ is OK
+  // for 38300 items => 30.0478515625 ms // init load speed is slightly noticeable here, but OK
+  // for 383000 items => 293.966796875 ms // init load speed is annoying here, NOT OK, BE chunking needed
+  // 5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36 
+  // MacBook Pro Mid 2014
 
   return (
     <div className={styles.container}>
@@ -74,7 +48,6 @@ export async function getStaticProps() {
   )
   const json: ApiResponse = await res.json()
   const { edges } = json.data.allContentfulProductPage
-
   const filterOptions = {
     colors: new Set(),
     tags: new Set(),
