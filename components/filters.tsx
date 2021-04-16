@@ -23,11 +23,11 @@ const Filters = ({ colors, tags, priceLimits, onSubmit }: Props) => {
   return (
     <div>
       <Formik
-        initialValues={{ colors: { Yellow: true }, tags: {} }}
+        initialValues={{ colors: {}, tags: {} }}
         onSubmit={(values, { setSubmitting }) => {
           onSubmit({
-            colors: Object.keys(values.colors),
-            tags: Object.keys(values.tags),
+            colors: Object.keys(values.colors).filter(color => values.colors[color]),
+            tags: Object.keys(values.tags).filter(tag => values.tags[tag]),
             priceRange
           })
           setSubmitting(false)

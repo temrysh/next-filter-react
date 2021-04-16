@@ -5,17 +5,17 @@ import AutoSizer from "react-virtualized-auto-sizer"
 import InfiniteLoader from "react-window-infinite-loader"
 
 type Props = {
-  edges: any[],
+  data: any[],
 }
 
-const List = ({ edges }: Props) => {
+const List = ({ data }: Props) => {
   const list = useRef([])
-  const itemCount = edges.length
+  const itemCount = data.length
 
   const isItemLoaded = ({ index }) => !!list.current[index]
 
   const loadMoreItems = ({ startIndex, stopIndex }) =>
-    new Promise((resolve) => resolve(edges.slice(startIndex, stopIndex))).then(
+    new Promise((resolve) => resolve(data.slice(startIndex, stopIndex))).then(
       (data: []) => (list.current = [...list.current, ...data])
     )
 

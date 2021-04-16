@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import Head from "next/head"
 import { Range } from 'react-input-range'
 import styles from "../styles/Home.module.css"
-import Filters from "../components/filters"
+import Filters, { FilterMap } from "../components/filters"
 import List from "../components/list"
 import { ProductNode, ApiResponse } from '../utils/schema'
 
@@ -12,16 +13,58 @@ type Props = {
   priceLimits: Range
 }
 
-const Home = ({ edges, colors, tags, priceLimits }: Props) => (
-  <div className={styles.container}>
-    <Head>
-      <title>Next Filter React</title>
-      <link rel="icon" href="/favicon.ico" />
-    </Head>
-    <Filters colors={colors} tags={tags} priceLimits={priceLimits} onSubmit={filters => console.log({ filters })} />
-    <List edges={edges} />
-  </div>
-)
+const trimTag = (tag: string) => tag.trim().toLocaleLowerCase().replace('#', '')
+
+const getFilteredList = (edges: ProductNode[], filters: FilterMap, priceLimits: Range): ProductNode[] => {
+  const { colors, tags, priceRange } = filters
+  console.log({ priceRange, priceLimits })
+
+  return edges.filter(({ node }) => {
+    const price: number = Number(node.shopifyProductEu.variants.edges[0].node.price)
+
+    if (colors.length && (!node.colorFamily || !colors.includes(node.colorFamily[0].name))) return false
+
+    if (tags.length) {
+      const isSomeTagsIncludes = node.categoryTags?.reduce((acc: boolean, tag) => {
+        if (acc) return acc
+        return tags.includes(trimTag(tag))
+      }, false)
+
+      if (!isSomeTagsIncludes) return false
+    }
+
+    if (priceRange.min !== priceLimits.min) {
+      if (Math.min(priceRange.min, price) === price) return false
+    }
+
+    if (priceRange.max !== priceLimits.max) {
+      if (Math.max(priceRange.max, price) === price) return false
+    }
+
+    return true
+  })
+}
+
+const Home = ({ edges, colors, tags, priceLimits }: Props) => {
+  const [filters, setFilters] = useState<FilterMap>({ colors: [], tags: [], priceRange: priceLimits })
+
+  console.time('filter')
+  const list = getFilteredList(edges, filters, priceLimits)
+  console.timeEnd('filter')
+
+  console.log({ filters, list })
+
+  return (
+    <div className={styles.container}>
+      <Head>
+        <title>Next Filter React</title>
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <Filters colors={colors} tags={tags} priceLimits={priceLimits} onSubmit={filters => setFilters(filters)} />
+      <List data={list} />
+    </div>
+  )
+}
 
 export default Home
 
@@ -40,7 +83,7 @@ export async function getStaticProps() {
 
   edges.reduce((targets, { node }) => {
     node.colorFamily?.forEach(({ name }) => targets.colors.add(name))
-    node.categoryTags?.forEach(tag => targets.tags.add(tag.trim().toLocaleLowerCase().replace('#', '')))
+    node.categoryTags?.forEach(tag => targets.tags.add(trimTag(tag)))
     node.shopifyProductEu.variants.edges?.forEach(({ node: { price } }) => targets.prices.add(price))
     return targets
   }, filterOptions)
