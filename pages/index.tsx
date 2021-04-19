@@ -1,11 +1,13 @@
 import { useState } from 'react'
+import { useDeepCompareEffect, useDeepCompareMemo } from 'use-deep-compare'
+import { useRouter } from 'next/router'
 import Head from "next/head"
 import { Range } from 'react-input-range'
 import styles from "../styles/Home.module.css"
 import Filters, { FilterMap } from "../components/filters"
 import List from "../components/list"
 import { ProductNode, ApiResponse } from '../utils/schema'
-import { trimTag, getFilteredList } from '../utils/helpers'
+import { getFilters, filtersToQuery, cropString, getFilteredList } from '../utils/helpers'
 
 type Props = {
   edges: ProductNode[]
@@ -15,18 +17,23 @@ type Props = {
 }
 
 const Home = ({ edges, colors, tags, priceLimits }: Props) => {
-  const [filters, setFilters] = useState<FilterMap>({ colors: [], tags: [], priceRange: priceLimits })
+  const router = useRouter()
+  const { query } = router
+  const initFilters: FilterMap = getFilters(query, priceLimits)
+  const [filters, setFilters] = useState<FilterMap>(initFilters)
+  const list = useDeepCompareMemo<ProductNode[]>(() => getFilteredList(edges, filters, priceLimits), [filters])
 
-  // console.time('getFilteredList')
-  const list = getFilteredList(edges, filters, priceLimits)
-  // console.timeEnd('getFilteredList')
-  // Max vals when all filters enabled in dev env:
-  // for 383 items => 0.933837890625 ms // assignment list
-  // for 3830 items => 10.008056640625 ms // so 2000+ is OK
-  // for 38300 items => 30.0478515625 ms // init load speed is slightly noticeable here, but OK
-  // for 383000 items => 293.966796875 ms // init load speed is annoying here, NOT OK, BE chunking needed
-  // 5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36 
-  // MacBook Pro Mid 2014
+  const setQueryParams = (filters: FilterMap) => {
+    router.push(
+      { query: filtersToQuery(filters) },
+      undefined,
+      { shallow: true }
+    )
+  }
+
+  useDeepCompareEffect(() => {
+    setFilters(getFilters(query, priceLimits))
+  }, [query])
 
   return (
     <div className={styles.container}>
@@ -34,7 +41,7 @@ const Home = ({ edges, colors, tags, priceLimits }: Props) => {
         <title>Next Filter React</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Filters colors={colors} tags={tags} priceLimits={priceLimits} onSubmit={filters => setFilters(filters)} />
+      <Filters filters={{ colors, tags, priceRange: priceLimits }} initFilters={initFilters} onSubmit={filters => setQueryParams(filters)} />
       <List data={list} />
     </div>
   )
@@ -55,8 +62,8 @@ export async function getStaticProps() {
   }
 
   edges.reduce((targets, { node }) => {
-    node.colorFamily?.forEach(({ name }) => targets.colors.add(name))
-    node.categoryTags?.forEach(tag => targets.tags.add(trimTag(tag)))
+    node.colorFamily?.forEach(({ name }) => targets.colors.add(cropString(name)))
+    node.categoryTags?.forEach(tag => targets.tags.add(cropString(tag)))
     node.shopifyProductEu.variants.edges?.forEach(({ node: { price } }) => targets.prices.add(price))
     return targets
   }, filterOptions)

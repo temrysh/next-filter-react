@@ -3,9 +3,10 @@ import Image from "next/image"
 import { FixedSizeList } from "react-window"
 import AutoSizer from "react-virtualized-auto-sizer"
 import InfiniteLoader from "react-window-infinite-loader"
+import { ProductNode } from '../utils/schema'
 
 type Props = {
-  data: any[],
+  data: ProductNode[],
 }
 
 const List = ({ data }: Props) => {
@@ -32,6 +33,7 @@ const List = ({ data }: Props) => {
         <span>{list.current[index].node.name}</span>
       </div>
     ) : null
+
   return (
     <AutoSizer>
       {({ height, width }) => (
