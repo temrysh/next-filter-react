@@ -1,39 +1,24 @@
-import { useState } from 'react'
-import { useDeepCompareEffect, useDeepCompareMemo } from 'use-deep-compare'
+import { Range } from 'react-input-range'
 import { useRouter } from 'next/router'
 import Head from "next/head"
-import { Range } from 'react-input-range'
 import styles from "../styles/Home.module.css"
 import Filters, { FilterMap } from "../components/filters"
 import List from "../components/list"
 import { ProductNode, ApiResponse } from '../utils/schema'
+import { getJSON } from '../utils/api'
 import { getFilters, filtersToQuery, cropString, getFilteredList } from '../utils/helpers'
 
 type Props = {
-  edges: ProductNode[]
-  colors: string[]
-  tags: string[]
-  priceLimits: Range
+  list: ProductNode[]
+  filters: FilterMap,
+  filterOptions: FilterMap,
 }
 
-const Home = ({ edges, colors, tags, priceLimits }: Props) => {
+const Home = ({ list, filters, filterOptions }: Props) => {
   const router = useRouter()
-  const { query } = router
-  const initFilters: FilterMap = getFilters(query, priceLimits)
-  const [filters, setFilters] = useState<FilterMap>(initFilters)
-  const list = useDeepCompareMemo<ProductNode[]>(() => getFilteredList(edges, filters, priceLimits), [filters])
-
   const setQueryParams = (filters: FilterMap) => {
-    router.push(
-      { query: filtersToQuery(filters) },
-      undefined,
-      { shallow: true }
-    )
+    router.push({ query: filtersToQuery(filters, filterOptions.priceRange) })
   }
-
-  useDeepCompareEffect(() => {
-    setFilters(getFilters(query, priceLimits))
-  }, [query])
 
   return (
     <div className={styles.container}>
@@ -41,7 +26,7 @@ const Home = ({ edges, colors, tags, priceLimits }: Props) => {
         <title>Next Filter React</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Filters filters={{ colors, tags, priceRange: priceLimits }} initFilters={initFilters} onSubmit={filters => setQueryParams(filters)} />
+      <Filters filters={filters} filterOptions={filterOptions} onSubmit={filters => setQueryParams(filters)} />
       <List data={list} />
     </div>
   )
@@ -49,37 +34,40 @@ const Home = ({ edges, colors, tags, priceLimits }: Props) => {
 
 export default Home
 
-export async function getStaticProps() {
-  const res = await fetch(
-    "https://dl.dropbox.com/s/iebly5coc7dg8pe/miista-export.json"
-  )
-  const json: ApiResponse = await res.json()
+export async function getServerSideProps({ query }) {
+  const json: ApiResponse = await getJSON("https://dl.dropbox.com/s/iebly5coc7dg8pe/miista-export.json")
   const { edges } = json.data.allContentfulProductPage
-  const filterOptions = {
-    colors: new Set(),
-    tags: new Set(),
-    prices: new Set(),
-  }
 
-  edges.reduce((targets, { node }) => {
+  const filterOptionsMap = edges.reduce((targets, { node }) => {
     node.colorFamily?.forEach(({ name }) => targets.colors.add(cropString(name)))
-    node.categoryTags?.forEach(tag => targets.tags.add(cropString(tag)))
+    node.categoryTags?.forEach((tag: string) => targets.tags.add(cropString(tag)))
     node.shopifyProductEu.variants.edges?.forEach(({ node: { price } }) => targets.prices.add(price))
     return targets
-  }, filterOptions)
+  }, {
+    colors: new Set<string>(),
+    tags: new Set<string>(),
+    prices: new Set<string>(),
+  })
 
-  const [colors, tags, prices] = Object.values(filterOptions).map(s => Array.from(s).sort())
-  const priceLimits = prices.reduce((acc: Range, price: string) => ({
+  const [colors, tags, prices] = Object.values(filterOptionsMap).map((s: Set<string>) => Array.from(s).sort())
+
+  const priceRange: Range = prices.reduce((acc: Range, price: string): Range => ({
     min: Math.min(acc.min, Number(price)),
     max: Math.max(acc.max, Number(price))
-  }), { min: prices[0], max: prices[0] })
+  }), { min: Number(prices[0]), max: Number(prices[0]) })
+
+  const filters = getFilters(query, priceRange)
+  const list = getFilteredList(edges, filters, priceRange)
 
   return {
     props: {
-      edges,
-      colors,
-      tags,
-      priceLimits,
+      list,
+      filters,
+      filterOptions: {
+        colors,
+        tags,
+        priceRange,
+      }
     },
   }
 }

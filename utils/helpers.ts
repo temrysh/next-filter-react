@@ -26,14 +26,14 @@ export const getFilters = (query: ParsedUrlQuery, priceLimits: Range) => ({
   priceRange: getInitRange(query[QueryParams.Min], query[QueryParams.Max], priceLimits)
 })
 
-export const filtersToQuery = (filters: FilterMap): ParsedUrlQuery => {
+export const filtersToQuery = (filters: FilterMap, priceLimits: Range): ParsedUrlQuery => {
   const query = {}
   const { colors, tags, priceRange: { min, max } } = filters
 
   if (colors && colors.length) query[QueryParams.Color] = colors
   if (tags && tags.length) query[QueryParams.Tag] = tags
-  if (min) query[QueryParams.Min] = min
-  if (max) query[QueryParams.Max] = max
+  if (min && min !== priceLimits.min) query[QueryParams.Min] = min
+  if (max && max !== priceLimits.max) query[QueryParams.Max] = max
 
   return query
 }

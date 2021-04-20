@@ -11,23 +11,23 @@ export type FilterMap = {
 
 type Props = {
   filters: FilterMap
-  initFilters: FilterMap
+  filterOptions: FilterMap
   onSubmit: (f: FilterMap) => void
 }
 
 const fieldReducer = (acc: { [key: string]: boolean }, field: string) => (acc[field] = true) && acc
 
-const Filters = ({ filters, initFilters, onSubmit }: Props) => {
+const Filters = ({ filters, filterOptions, onSubmit }: Props) => {
   const initialValues = {
-    colors: initFilters.colors.reduce(fieldReducer, {}),
-    tags: initFilters.tags.reduce(fieldReducer, {})
+    colors: filters.colors.reduce(fieldReducer, {}),
+    tags: filters.tags.reduce(fieldReducer, {})
   }
-  const { colors, tags, priceRange: { min, max } } = filters
-  const [priceRange, setPriceRange] = useState<Range>(initFilters.priceRange)
+  const { colors, tags, priceRange: { min, max } } = filterOptions
+  const [priceRange, setPriceRange] = useState<Range>(filterOptions.priceRange)
 
   useEffect(() => {
-    setPriceRange(initFilters.priceRange)
-  }, [initFilters.priceRange.min, initFilters.priceRange.max])
+    setPriceRange(filters.priceRange)
+  }, [filters.priceRange.min, filters.priceRange.max])
 
   return (
     <div>
