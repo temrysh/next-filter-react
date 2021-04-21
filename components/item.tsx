@@ -30,9 +30,9 @@ const Item = ({ data: { node } }: Props) =>
   />
   <Details>
     <Name>{node.name}</Name>
-    {node?.shopifyProductEu?.variants?.edges?.length && node.shopifyProductEu.variants.edges[0].node.price && <div><span>Price:</span>{node.shopifyProductEu.variants.edges[0].node.price}</div>}
-    {node?.colorFamily?.length && node.colorFamily[0] && <div><span>Color:</span>{node.colorFamily[0].name}</div>}
-    {node?.categoryTags?.length && node.categoryTags && <div><span>Tags:</span>{node.categoryTags.map(tag => <span>{tag}</span>)}</div>}
+    {node?.shopifyProductEu?.variants?.edges?.length && node.shopifyProductEu.variants.edges[0].node.price && <div><span>Price: </span>{node.shopifyProductEu.variants.edges[0].node.price}</div>}
+    {node?.colorFamily?.length && node.colorFamily[0] && <div><span>Color: </span>{node.colorFamily[0].name}</div>}
+    {node?.categoryTags?.length && node.categoryTags && <div><span>Tags: </span>{node.categoryTags.join(', ')}</div>}
   </Details>
 </Container>
 )

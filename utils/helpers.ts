@@ -10,6 +10,7 @@ export const getInitParams = (params: Params): string[] => params ? (Array.isArr
 
 export const getNumberParams = (params: Params): number | null => {
   if (Array.isArray(params)) return null
+  if (params?.length === 0) return null
   const n = Number(params)
   if (!Number.isInteger(n)) return null
   return n
@@ -38,7 +39,7 @@ export const filtersToQuery = (filters: FilterMap, priceLimits: Range): ParsedUr
   return query
 }
 
-export const cropString = (tag: string) => tag.trim().toLocaleLowerCase().replace('#', '')
+export const cropString = (tag: string) => tag.replace('#', '').trim().toLocaleLowerCase()
 
 export const getFilteredList = (edges: ProductNode[], filters: FilterMap, priceLimits: Range): ProductNode[] => {
   const { colors, tags, priceRange } = filters

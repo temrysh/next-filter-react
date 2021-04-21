@@ -30,9 +30,7 @@ const Page = ({ cursor, initialData, checkForMore }: Props) => {
 
   return (
     <>
-      {
-        (data?.list || []).map((productNode: ProductNode) => <Item data={productNode} key={productNode.node.name} />)
-      }
+      {(data?.list || []).map((productNode: ProductNode) => <Item data={productNode} key={productNode.node.name} />)}
     </>
   )
 }
