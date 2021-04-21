@@ -1,62 +1,27 @@
-import { useRef } from "react"
-import Image from "next/image"
-import { FixedSizeList } from "react-window"
-import AutoSizer from "react-virtualized-auto-sizer"
-import InfiniteLoader from "react-window-infinite-loader"
+import { useState, useEffect } from "react"
+import Page from './page'
 import { ProductNode } from '../utils/schema'
 
 type Props = {
   data: ProductNode[],
+  resetTrigger: string,
 }
 
-const List = ({ data }: Props) => {
-  const list = useRef([])
-  const itemCount = data.length
+const List = ({ data, resetTrigger }: Props) => {
+  const [cursor, setCursor] = useState<number>(0)
 
-  const isItemLoaded = ({ index }) => !!list.current[index]
-
-  const loadMoreItems = ({ startIndex, stopIndex }) =>
-    new Promise((resolve) => resolve(data.slice(startIndex, stopIndex))).then(
-      (data: []) => (list.current = [...list.current, ...data])
-    )
-
-  const Item = ({ index, style }) =>
-    list.current[index] ? (
-      <div style={style}>
-        <Image
-          width={500}
-          height={500}
-          priority
-          src={`https:${list.current[index].node.thumbnailImage.file.url}`}
-          alt={list.current[index].node.name}
-        />
-        <span>{list.current[index].node.name}</span>
-      </div>
-    ) : null
+  useEffect(() => {
+    setCursor(0)
+  }, [resetTrigger])
 
   return (
-    <AutoSizer>
-      {({ height, width }) => (
-        <InfiniteLoader
-          isItemLoaded={isItemLoaded}
-          itemCount={itemCount}
-          loadMoreItems={loadMoreItems}
-        >
-          {({ onItemsRendered, ref }) => (
-            <FixedSizeList
-              onItemsRendered={onItemsRendered}
-              ref={ref}
-              height={height}
-              width={width}
-              itemSize={500}
-              itemCount={itemCount}
-            >
-              {Item}
-            </FixedSizeList>
-          )}
-        </InfiniteLoader>
-      )}
-    </AutoSizer>)
+    <div>
+      <Page cursor={0} initialData={data} key={0} />
+      {Array(cursor).fill(1).map((_, idx) => <Page cursor={idx + 1} key={idx + 1} />)}
+      <button onClick={() => setCursor(cursor + 1)}>Load more</button>
+      <div style={{ display: 'none' }}><Page cursor={cursor + 1} /></div>
+    </div>
+  )
 }
 
 export default List

@@ -41,24 +41,13 @@ export const filtersToQuery = (filters: FilterMap, priceLimits: Range): ParsedUr
 export const cropString = (tag: string) => tag.trim().toLocaleLowerCase().replace('#', '')
 
 export const getFilteredList = (edges: ProductNode[], filters: FilterMap, priceLimits: Range): ProductNode[] => {
-
-  // Max vals when all filters enabled in dev env (for comparison: toolbeer.dk filter takes minimum 160 ms):
-  // for 383 items => 0.933837890625 ms // assignment list
-  // for 3830 items => 10.008056640625 ms // so 2000+ is OK
-  // for 38300 items => 30.0478515625 ms // init load speed is slightly noticeable here (apprx 100ms more), but OK
-  // for 383000 items => 293.966796875 ms // init load speed is annoying here, NOT OK, BE chunking needed
-  // 5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36 
-  // MacBook Pro Mid 2014
-
   const { colors, tags, priceRange } = filters
 
   return edges.filter(({ node }) => {
     const price = Number(node.shopifyProductEu.variants.edges[0].node.price)
 
-    // color category filtering
     if (colors.length && (!node.colorFamily || !colors.includes(cropString(node.colorFamily[0].name)))) return false
 
-    // tags sets matching
     if (tags.length) {
       const isSomeTagsIncludes = node.categoryTags?.reduce((isSomeFound: boolean, tag) => {
         if (isSomeFound) return isSomeFound
@@ -68,7 +57,6 @@ export const getFilteredList = (edges: ProductNode[], filters: FilterMap, priceL
       if (!isSomeTagsIncludes) return false
     }
 
-    // price filtering
     if (priceRange.min !== priceLimits.min) {
       if (Math.min(priceRange.min, price) === price) return false
     }

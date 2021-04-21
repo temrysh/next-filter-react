@@ -27,7 +27,7 @@ const Home = ({ list, filters, filterOptions }: Props) => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Filters filters={filters} filterOptions={filterOptions} onSubmit={filters => setQueryParams(filters)} />
-      <List data={list} />
+      <List data={list} resetTrigger={router.asPath} />
     </div>
   )
 }
@@ -57,7 +57,7 @@ export async function getServerSideProps({ query }) {
   }), { min: Number(prices[0]), max: Number(prices[0]) })
 
   const filters = getFilters(query, priceRange)
-  const list = getFilteredList(edges, filters, priceRange)
+  const list = getFilteredList(edges, filters, priceRange).slice(0, 10)
 
   return {
     props: {

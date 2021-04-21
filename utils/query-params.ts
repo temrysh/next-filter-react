@@ -2,5 +2,6 @@ export enum QueryParams {
   Color = 'c',
   Tag = 't',
   Min = 'n',
-  Max = 'x'
+  Max = 'x',
+  Cursor = 'cu',
 }
