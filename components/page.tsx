@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import useSWR, { SWRConfiguration } from 'swr'
 import { useRouter } from 'next/router'
 import Item from './item'
@@ -35,4 +36,4 @@ const Page = ({ cursor, initialData, checkForMore }: Props) => {
   )
 }
 
-export default Page
+export default memo(Page)
