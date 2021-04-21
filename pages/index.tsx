@@ -44,11 +44,11 @@ export async function getServerSideProps({ query }) {
   const json: ApiResponse = await getJSON("https://dl.dropbox.com/s/iebly5coc7dg8pe/miista-export.json")
   const { edges } = json.data.allContentfulProductPage
 
-  const filterOptionsMap = edges.reduce((targets, { node }) => {
-    node.colorFamily?.forEach(({ name }) => targets.colors.add(cropString(name)))
-    node.categoryTags?.forEach((tag: string) => targets.tags.add(cropString(tag)))
-    node.shopifyProductEu.variants.edges?.forEach(({ node: { price } }) => targets.prices.add(price))
-    return targets
+  const filterOptionsMap = edges.reduce((acc, { node }) => {
+    node.colorFamily?.forEach(({ name }) => acc.colors.add(cropString(name)))
+    node.categoryTags?.forEach(tag => acc.tags.add(cropString(tag)))
+    node.shopifyProductEu.variants.edges?.forEach(({ node: { price } }) => acc.prices.add(price))
+    return acc
   }, {
     colors: new Set<string>(),
     tags: new Set<string>(),
