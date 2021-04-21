@@ -9,19 +9,24 @@ const fetcher = (url: string) => fetch(url).then(res => res.json())
 
 type Props = {
   cursor: number,
-  initialData?: ProductNode[]
+  initialData?: ProductNode[],
+  checkForMore?: (notEmpty: boolean) => void,
 }
 
-const Page = ({ cursor, initialData }: Props) => {
+const Page = ({ cursor, initialData, checkForMore }: Props) => {
   const { asPath } = useRouter()
   const path = asPath.substring(1)
   const cursorPrefix = path.includes('?') ? '&' : '?'
   const url = `${apiBase}${path}${cursorPrefix}${QueryParams.Cursor}=${cursor}`
-  const options: SWRConfiguration = {}
+  const options: SWRConfiguration = {
+    revalidateOnFocus: false
+  }
 
   if (initialData) options.initialData = { list: initialData }
 
   const { data } = useSWR(url, fetcher, options)
+
+  data && checkForMore && checkForMore(data?.list.length !== 0)
 
   return (
     <>
