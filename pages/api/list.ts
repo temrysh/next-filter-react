@@ -2,13 +2,13 @@ import { Range } from 'react-input-range'
 import { ApiResponse } from '../../utils/schema'
 import { getJSON } from '../../utils/api'
 import { getFilters, getFilteredList } from '../../utils/helpers'
-import { QueryParams } from '../../utils/query-params'
+import { QueryParams, size } from '../../utils/query-params'
 
 export default async function handler({ query }, res) {
   const json: ApiResponse = await getJSON("https://dl.dropbox.com/s/iebly5coc7dg8pe/miista-export.json")
   const { edges } = json.data.allContentfulProductPage
 
-  const cursor = (Number(query[QueryParams.Cursor]) ?? 0) * 10
+  const cursor = (Number(query[QueryParams.Cursor]) ?? 0) * size
   const firstPrice = Number(edges[0].node.shopifyProductEu.variants.edges[0].node.price)
 
   const priceRange: Range = edges.reduce((acc: Range, { node }): Range => {
@@ -20,7 +20,7 @@ export default async function handler({ query }, res) {
   }, { min: firstPrice, max: firstPrice })
 
   const filters = getFilters(query, priceRange)
-  const list = getFilteredList(edges, filters, priceRange).slice(cursor, cursor + 10)
+  const list = getFilteredList(edges, filters, priceRange).slice(cursor, cursor + size)
 
   res.status(200).json({ list })
 }

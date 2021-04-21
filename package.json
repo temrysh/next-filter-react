@@ -8,6 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@emotion/react": "^11.1.5",
+    "@emotion/styled": "^11.3.0",
     "formik": "^2.2.6",
     "memoizee": "^0.4.15",
     "next": "10.1.3",

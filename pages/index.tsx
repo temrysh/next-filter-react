@@ -1,11 +1,12 @@
 import { Range } from 'react-input-range'
 import { useRouter } from 'next/router'
 import Head from "next/head"
-import styles from "../styles/Home.module.css"
+import styled from '@emotion/styled'
 import Filters, { FilterMap } from "../components/filters"
 import List from "../components/list"
-import { ProductNode, ApiResponse } from '../utils/schema'
+import { size } from '../utils/query-params'
 import { getJSON } from '../utils/api'
+import { ProductNode, ApiResponse } from '../utils/schema'
 import { getFilters, filtersToQuery, cropString, getFilteredList } from '../utils/helpers'
 
 type Props = {
@@ -14,6 +15,11 @@ type Props = {
   filterOptions: FilterMap,
 }
 
+const Container = styled.div`
+  height: 100vh;
+  overflow: hidden;
+`
+
 const Home = ({ list, filters, filterOptions }: Props) => {
   const router = useRouter()
   const setQueryParams = (filters: FilterMap) => {
@@ -21,14 +27,14 @@ const Home = ({ list, filters, filterOptions }: Props) => {
   }
 
   return (
-    <div className={styles.container}>
+    <Container>
       <Head>
         <title>Next Filter React</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Filters filters={filters} filterOptions={filterOptions} onSubmit={filters => setQueryParams(filters)} />
       <List data={list} resetTrigger={router.asPath} />
-    </div>
+    </Container>
   )
 }
 
@@ -57,7 +63,7 @@ export async function getServerSideProps({ query }) {
   }), { min: Number(prices[0]), max: Number(prices[0]) })
 
   const filters = getFilters(query, priceRange)
-  const list = getFilteredList(edges, filters, priceRange).slice(0, 10)
+  const list = getFilteredList(edges, filters, priceRange).slice(0, size)
 
   return {
     props: {

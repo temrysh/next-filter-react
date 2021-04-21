@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import styled from '@emotion/styled'
 import { Formik, Form, Field } from "formik"
 import InputRange, { Range } from 'react-input-range'
 import 'react-input-range/lib/css/index.css'
@@ -15,6 +16,28 @@ type Props = {
   onSubmit: (f: FilterMap) => void
 }
 
+const Container = styled.div`
+  width: 300px;
+  height: 100vh;
+  overflow-y: scroll;
+  float: left;
+`
+
+const SectionContainer = styled.div`
+  margin: 20px;
+  margin-bottom: 40px;
+`
+
+const SectionHeading = styled.span`
+  font-size: 18px;
+  display: block;
+  margin-bottom: 20px;
+`
+
+const OptionContainer = styled.div`
+  margin: 6px 0 6px 0;
+`
+
 const fieldReducer = (acc: { [key: string]: boolean }, field: string) => (acc[field] = true) && acc
 
 const Filters = ({ filters, filterOptions, onSubmit }: Props) => {
@@ -30,7 +53,7 @@ const Filters = ({ filters, filterOptions, onSubmit }: Props) => {
   }, [filters.priceRange.min, filters.priceRange.max])
 
   return (
-    <div>
+    <Container>
       <Formik
         initialValues={initialValues}
         enableReinitialize
@@ -44,48 +67,48 @@ const Filters = ({ filters, filterOptions, onSubmit }: Props) => {
         }}
       >
         {({ isSubmitting }) => (
-          <>
-            <div>
-              <span>Price range:</span>
+          <Form>
+            <SectionContainer>
+              <button type="submit" disabled={isSubmitting}>Apply</button>
+            </SectionContainer>
+            <SectionContainer>
+              <SectionHeading>Price range:</SectionHeading>
               <InputRange
                 minValue={min}
                 maxValue={max}
                 value={priceRange}
                 onChange={range => setPriceRange(range as Range)} />
-            </div>
-            <Form>
-              <div>
-                <span>Colors:</span>
-                {colors.map((color) => (
-                  <div key={color}>
-                    <Field
-                      type="checkbox"
-                      id={color}
-                      name={`colors.${color}`}
-                    />
-                    <label htmlFor={color}>{color}</label>
-                  </div>
-                ))}
-              </div>
-              <div>
-                <span>Tags:</span>
-                {tags.map((tag) => (
-                  <div key={tag}>
-                    <Field
-                      type="checkbox"
-                      id={tag}
-                      name={`tags.${tag}`}
-                    />
-                    <label htmlFor={tag}>{tag}</label>
-                  </div>
-                ))}
-              </div>
-              <button type="submit" disabled={isSubmitting}>Apply</button>
-            </Form>
-          </>
+            </SectionContainer>
+            <SectionContainer>
+              <SectionHeading>Colors:</SectionHeading>
+              {colors.map((color) => (
+                <OptionContainer key={color}>
+                  <Field
+                    type="checkbox"
+                    id={color}
+                    name={`colors.${color}`}
+                  />
+                  <label htmlFor={color}>{color}</label>
+                </OptionContainer>
+              ))}
+            </SectionContainer>
+            <SectionContainer>
+              <SectionHeading>Tags:</SectionHeading>
+              {tags.map((tag) => (
+                <OptionContainer key={tag}>
+                  <Field
+                    type="checkbox"
+                    id={tag}
+                    name={`tags.${tag}`}
+                  />
+                  <label htmlFor={tag}>{tag}</label>
+                </OptionContainer>
+              ))}
+            </SectionContainer>
+          </Form>
         )}
       </Formik>
-    </div>
+    </Container>
   )
 }
 

@@ -5,3 +5,5 @@ export enum QueryParams {
   Max = 'x',
   Cursor = 'cu',
 }
+
+export const size = 10
